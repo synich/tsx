@@ -4,6 +4,16 @@
 #include <stdio.h>
 #pragma warning(disable:4996)
 
+#ifdef _MSC_VER
+# ifdef SCHEME_DLL
+# define SCHEME_EXPORT __declspec(dllexport)
+# else
+# define SCHEME_EXPORT __declspec(dllimport)
+# endif
+#else
+# define SCHEME_EXPORT
+#endif
+
 struct cell_t;
 struct scheme;
 
@@ -22,7 +32,7 @@ struct string_t{
 
 typedef cell_t* (*foreign_func_t)(scheme *, cell_t*); //外部的扩展函数原型
 
-struct pait_t{
+struct pair_t{
 	struct cell_t *_car;
 	struct cell_t *_cdr;
 };
@@ -54,16 +64,16 @@ struct port_t {
 	};
 };
 
-struct cell_t {
+typedef struct cell_t{
 	unsigned int _flag;
 	union {
 		num_t _num;
 		string_t _string;
 		foreign_func_t _fun;
-		pait_t _pair;
+		pair_t _pair;
 		port_t *_port;
 	};
-};
+}cell_t;
 
 #define CELL_SEGSIZE 5000		/* # of cells in one segment */
 #define CELL_NSEGMENT 100    /* # of segments for cells */
@@ -78,7 +88,7 @@ extern cell_t g_true;
 extern cell_t g_false;
 extern cell_t g_eof;
 
-struct scheme {
+typedef struct scheme{
 	//内存分配管理
 	func_alloc malloc;
 	func_dealloc free;
@@ -125,20 +135,12 @@ struct scheme {
 	cell_t* sym_error_hook;		/* *error-hook* */
 	cell_t* sym_sharp_hook;		/* *sharp-hook* */
 	cell_t* sym_compile_hook;	/* *compile-hook* */
-};
+} scheme;
 
-/* operator code */
-enum opcode {
-#define _OP_DEF(A,B,C,D,E,OP) OP,
-#include "opdefines.h"
-	OP_MAXDEFINED
-};
-
-typedef cell_t* (*dispatch_func_t)(scheme *, opcode);
-typedef struct {
-	dispatch_func_t func;	//函数过程
-	char *name;					//函数名
-	int min_arity;					//最少参数个数
-	int max_arity;				//最大参数个数
-	char *args_type;
-} op_code_info;
+SCHEME_EXPORT scheme* scheme_new(func_alloc malloc_f, func_dealloc free_f);
+SCHEME_EXPORT void scheme_destroy(scheme *sc);
+SCHEME_EXPORT void scheme_load_file(scheme *sc, FILE *fin, const char *filename);
+SCHEME_EXPORT void scheme_load_string(scheme *sc, const char *cmd);
+SCHEME_EXPORT long scheme_result_long(scheme *sc, int *err);
+SCHEME_EXPORT double scheme_result_double(scheme *sc, int *err);
+SCHEME_EXPORT char* scheme_result_string(scheme *sc, int *err);

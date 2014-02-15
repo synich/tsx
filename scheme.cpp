@@ -1,7 +1,6 @@
-//注释者：xuegang (qq:308821698 blog: http://www.cppblog.com/flysnowxg)
+//修改者：shu_wang (blog: http://blog.163.com/shu_wang)
 //原始代码：http://tinyscheme.sourceforge.net/home.html
-//说明：这个代码是基于tinyscheme-1.41版本的，在阅读这个代码过程中，
-//         为了方便阅读对这个代码做了大幅度的修改，并加了很多注释
+//说明：这个代码是基于xuegang对tinyscheme-1.41的修改版本
 #include <math.h>
 #include <limits.h>
 #include <float.h>
@@ -10,52 +9,68 @@
 #include <stdlib.h>
 #include "scheme.h"
 
+/* operator code */
+enum opcode {
+#define _OP_DEF(A,B,C,D,E,OP) OP,
+#include "opdefines.h"
+	OP_MAXDEFINED
+};
+
+typedef cell_t* (*dispatch_func_t)(scheme *, opcode);
+typedef struct {
+	dispatch_func_t func;	//函数过程
+	char *name;					//函数名
+	int min_arity;					//最少参数个数
+	int max_arity;				//最大参数个数
+	char *args_type;
+} op_code_info;
+
 static void gc(scheme *sc, cell_t* a, cell_t* b);
 static int syntax_sym2opcode(cell_t* p);
 cell_t* mk_symbol(scheme *sc, const char *name) ;
 
-#define TOK_EOF     -1					// 输入结束
+#define TOK_EOF     -1				// 输入结束
 #define TOK_LPAREN  0				// (
 #define TOK_RPAREN  1				// )
-#define TOK_DOT     2					// .
+#define TOK_DOT     2				// .
 #define TOK_ATOM    3				// 原子 （number id symbol ）
 #define TOK_QUOTE   4				// ' 
-#define TOK_COMMENT 5			// ,
+#define TOK_COMMENT 5				// ,
 #define TOK_DQUOTE  6				// "
 #define TOK_BQUOTE  7				// `
 #define TOK_COMMA   8				// ,
 #define TOK_ATMARK  9				// ,@
-#define TOK_SHARP 10					// # 
-#define TOK_SHARP_CONST 11		// #  常量 (例如 #t #f #\a)
+#define TOK_SHARP 10				// # 
+#define TOK_SHARP_CONST 11			// #  常量 (例如 #t #f #\a)
 #define TOK_VECTOR 12				// #( 数组
 
 #define DELIMITERS  "()\";\f\t\v\n\r "	// 分隔符 
 #define BLOCK_SIZE 256
 
 enum scheme_type {
-	T_PAIR=1,								// 点对
+	T_PAIR=1,						// 点对
 	T_NUMBER=2,						// 数字
-	T_CHAR=3,							// 字符
-	T_STRING=4,							// 字符串
+	T_CHAR=3,						// 字符
+	T_STRING=4,						// 字符串
 	T_SYMBOL=5,						// 符号
 	T_VECTOR=6,						// 数组 vector : pair<any,any>[num]
-	T_PORT=7,							// 端口
-	T_PROC=8,							// 过程
-	T_FOREIGN=9,						// 扩展过程
+	T_PORT=7,						// 端口
+	T_PROC=8,						// 过程
+	T_FOREIGN=9,					// 扩展过程
 	T_CLOSURE=10,					// 闭包
 	T_PROMISE=11,					// 
 	T_MACRO=12,						// 宏
-	T_CONTINUATION=13,			// 延续
-	T_ENVIRONMENT=14,			// 环境 	
+	T_CONTINUATION=13,				// 延续
+	T_ENVIRONMENT=14,				// 环境 	
 	T_LAST_TYPE=14					// 最大编号
 };
 
-//													/* 7654321076543210 */	// 16位
-#define TYPE_MASK			31			/* 0000000000011111 */	// 5位 可以表示32个类型
-#define T_SYNTAX			4096		/* 0001000000000000 */    // 语法符号
-#define T_IMMUTABLE		8192		/* 0010000000000000 */	// 标记一个cell为不可改变的
-#define T_ATOM				16384	/* 0100000000000000 */	// 标记一个cell为原子
-#define REF_MARK			32768	/* 1000000000000000 */	/* only for gc */
+//								/* 7654321076543210 */	// 16位
+#define TYPE_MASK		31		/* 0000000000011111 */	// 5位 可以表示32个类型
+#define T_SYNTAX		4096	/* 0001000000000000 */  // 语法符号
+#define T_IMMUTABLE		8192	/* 0010000000000000 */	// 标记一个cell为不可改变的
+#define T_ATOM			16384	/* 0100000000000000 */	// 标记一个cell为原子
+#define REF_MARK		32768	/* 1000000000000000 */	/* only for gc */
 
 /* macros for cell operations */
 #define typeflag(p)    ((p)->_flag)
@@ -69,7 +84,6 @@ enum scheme_type {
 #define setmark(p)       typeflag(p) |= REF_MARK
 #define clrmark(p)       typeflag(p) &= ~REF_MARK
 
-cell_t g_sink;
 cell_t g_nil;
 cell_t g_true;
 cell_t g_false;
@@ -220,8 +234,8 @@ static int is_ascii_name(const char *name, int *pc) {
 static int hash_fn(const char *key, int table_size)
 {
 	unsigned int hashed = 0;
+	int bits_per_int = sizeof(unsigned int)*8;
 	for (const char *c = key; *c; c++) {
-		int bits_per_int = sizeof(unsigned int)*8;
 		/* letters have about 5 bits in them */
 		hashed = (hashed<<5) | (hashed>>(bits_per_int-5));
 		hashed ^= *c;
@@ -3247,16 +3261,22 @@ void scheme_load_string(scheme *sc, const char *cmd) {
 	if(sc->eval_result==0) sc->eval_result=sc->nesting!=0;
 }
 
-int scheme_init(scheme *sc, func_alloc malloc_f, func_dealloc free_f) {
-	inital_num(&g_zero,0L);
-	inital_num(&g_one,1L);
+scheme* scheme_new(func_alloc malloc_f, func_dealloc free_f) {
+    //First time should init some global varible.
+	if (0 == g_one.i){
+		inital_num(&g_zero,0L);
+		inital_num(&g_one,1L);
 
-	typeflag(&g_nil) = (T_ATOM | REF_MARK);
-	car(&g_nil) = cdr(&g_nil) = &g_nil;
-	typeflag(&g_true) = (T_ATOM | REF_MARK);
-	car(&g_true) = cdr(&g_true) = &g_true;
-	typeflag(&g_false) = (T_ATOM | REF_MARK);
-	car(&g_false) = cdr(&g_false) = &g_false;
+		typeflag(&g_nil) = (T_ATOM | REF_MARK);
+		car(&g_nil) = cdr(&g_nil) = &g_nil;
+		typeflag(&g_true) = (T_ATOM | REF_MARK);
+		car(&g_true) = cdr(&g_true) = &g_true;
+		typeflag(&g_false) = (T_ATOM | REF_MARK);
+		car(&g_false) = cdr(&g_false) = &g_false;	
+    }
+
+	scheme* sc = (scheme*)malloc_f(sizeof(scheme));
+	if(NULL == sc) return NULL;
 
 	sc->malloc=malloc_f;
 	sc->free=free_f;
@@ -3318,7 +3338,7 @@ int scheme_init(scheme *sc, func_alloc malloc_f, func_dealloc free_f) {
 			new_slot_in_env(sc, sym, proc);
 		}
 	}
-	return 1;
+	return sc;
 }
 
 void scheme_destroy(scheme *sc) {
@@ -3344,45 +3364,37 @@ void scheme_destroy(scheme *sc) {
 			sc->free(sc->load_stack[i].f.filename);
 		}
 	}
+	
+	sc->free(sc);
 }
 
-int main(int argc, char **argv) {
-	scheme sc;
-	if(!scheme_init(&sc,malloc,free)) {
-		fprintf(stderr,"Could not initialize!\n");
-		return 1;
+long scheme_result_long(scheme *sc, int *err){
+	if (is_integer(sc->ret_value)){
+		*err = 0;
+		return ivalue(sc->ret_value);
 	}
-	FILE* fin=fopen("init.scm","r");
-	if(fin!=0) scheme_load_file(&sc,fin,"init.scm");
-
-	if((argc>1) && strcmp(argv[1],"-?")==0) {
-		printf("TinyScheme 1.41 修改版(by flysnowxg)\n");
-		printf("帮助 :	tinyscheme -?\n");
-		printf("启动交互式控制台：tinyscheme\n");
-		printf("执行一个文件：tinyscheme  -f <file> [<arg1> <arg2> ...]\n");
-		printf("执行一个字符串：tinyscheme  -s command\n");
-		return 1;
+	else {
+		*err = -1;
+		return -1;
 	}
-	else if((argc>1)&& strcmp(argv[1],"-f")){
-		char* file_name=argv[1];
-		cell_t* args=&g_nil;
-		for(argv++;*argv;argv++) {
-			cell_t* p=mk_string(&sc,*argv);
-			args=cons(&sc,p,args);
-		}
-		args=reverse(&sc,args);
-		scheme_define(&sc,sc.global_env,mk_symbol(&sc,"*args*"),args);
-		FILE* fin=fopen(file_name,"r");
-		if(fin==0) fprintf(stderr,"Could not open file %s\n",file_name);
-		else scheme_load_file(&sc,fin,file_name);
+}
+double scheme_result_double(scheme *sc, int *err){
+	if (is_real(sc->ret_value)){
+		*err = 0;
+		return rvalue(sc->ret_value);
 	}
-	else if((argc>1)&&(strcmp(argv[1],"-s")==0)){
-		scheme_load_string(&sc,argv[1]);
+	else {
+		*err = -1;
+		return -1.0;
 	}
-	else{
-		printf("TinyScheme 1.41 修改版(by flysnowxg)\n");
-		scheme_load_file(&sc,stdin,0);
+}
+char* scheme_result_string(scheme *sc, int *err){
+	if (is_string(sc->ret_value)){
+		*err = 0;
+		return string_value(sc->ret_value);
 	}
-	scheme_destroy(&sc);
-	return sc.eval_result;
+	else {
+		*err = 0;
+		return NULL;
+	}
 }
