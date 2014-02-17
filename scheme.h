@@ -1,6 +1,7 @@
 //注释者：xuegang (qq:308821698 blog: http://www.cppblog.com/flysnowxg)
 //原始代码：http://tinyscheme.sourceforge.net/home.html
-#pragma once
+#ifndef __TINYSCHEME_H__
+#define __TINYSCHEME_H__
 #include <stdio.h>
 #pragma warning(disable:4996)
 
@@ -144,3 +145,5 @@ SCHEME_EXPORT void scheme_load_string(scheme *sc, const char *cmd);
 SCHEME_EXPORT long scheme_result_long(scheme *sc, int *err);
 SCHEME_EXPORT double scheme_result_double(scheme *sc, int *err);
 SCHEME_EXPORT char* scheme_result_string(scheme *sc, int *err);
+
+#endif
