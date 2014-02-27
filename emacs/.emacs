@@ -19,7 +19,7 @@
 
 ;(setq inferior-lisp-program "/bin/clisp")
 (add-to-list 'load-path "~/.emacs.d")
-;(require 'slime)
+(require 'init-hippie-expand)
 ;(slime-setup)
 ;(require 'slime-autoloads)
 
@@ -32,7 +32,7 @@
 ;;;;;;;;;;;;
 
 (require 'cmuscheme)
-(setq scheme-program-name "tsx")         ;; 如果用 Petite 就改成 "petite"
+(setq scheme-program-name "gosh")         ;; 如果用 Petite 就改成 "petite"
 
 
 ;; bypass the interactive question and start the default interpreter
