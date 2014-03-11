@@ -1538,6 +1538,7 @@ static void s_save(scheme *sc, opcode op, cell_t* args, cell_t* code) {
 static void mark(cell_t* a) {
 	cell_t* t = (cell_t*) 0;
 	cell_t* p = a;
+	cell_t* q;
 E2:  
 	setmark(p);
 	if(is_vector(p)) {
@@ -1551,7 +1552,7 @@ E2:
 	if (is_atom(p))
 		goto E6;
 	/* E4: down car */
-	cell_t* q = car(p);
+	q = car(p);
 	if (q && !is_mark(q)) {
 		setatom(p);  /* a note that we have moved car */
 		car(p) = t;
@@ -1567,7 +1568,7 @@ E5:
 		p = q;
 		goto E2;
 	}
-E6:   /* up.  Undo the link switching from steps E4 and E5. */
+E6: /* up.  Undo the link switching from steps E4 and E5. */
 	if (!t) return;
 	q = t;
 	if (is_atom(q)) {
