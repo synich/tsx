@@ -142,8 +142,8 @@ SCHEME_EXPORT scheme* scheme_new(func_alloc malloc_f, func_dealloc free_f);
 SCHEME_EXPORT void scheme_destroy(scheme *sc);
 SCHEME_EXPORT void scheme_load_file(scheme *sc, FILE *fin, const char *filename);
 SCHEME_EXPORT void scheme_load_string(scheme *sc, const char *cmd);
-SCHEME_EXPORT long scheme_result_long(scheme *sc, int *err);
-SCHEME_EXPORT double scheme_result_double(scheme *sc, int *err);
-SCHEME_EXPORT char* scheme_result_string(scheme *sc, int *err);
+SCHEME_EXPORT int scheme_result_long(scheme *sc, long *err);
+SCHEME_EXPORT int scheme_result_double(scheme *sc, double *err);
+SCHEME_EXPORT int scheme_result_string(scheme *sc, char **err);
 
 #endif

@@ -3369,34 +3369,31 @@ void scheme_destroy(scheme *sc) {
 	sc->free(sc);
 }
 
-long scheme_result_long(scheme *sc, int *err){
+int scheme_result_long(scheme *sc, long *ret){
 	if (is_integer(sc->ret_value)){
-		*err = 0;
-		return ivalue(sc->ret_value);
+		*ret = ivalue(sc->ret_value);
+		return 0;
 	}
 	else {
-		*err = -1;
 		return -1;
 	}
 }
-double scheme_result_double(scheme *sc, int *err){
+int scheme_result_double(scheme *sc, double *ret){
 	if (is_real(sc->ret_value)){
-		*err = 0;
-		return rvalue(sc->ret_value);
+		*ret = rvalue(sc->ret_value);
+		return 0;
 	}
 	else {
-		*err = -1;
-		return -1.0;
+		return -1;
 	}
 }
-char* scheme_result_string(scheme *sc, int *err){
+int scheme_result_string(scheme *sc, char **ret){
 	if (is_string(sc->ret_value)){
-		*err = 0;
-		return string_value(sc->ret_value);
+		*ret = string_value(sc->ret_value);
+		return 0;
 	}
 	else {
-		*err = 0;
-		return NULL;
+		return -1;
 	}
 }
 
