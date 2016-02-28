@@ -9,6 +9,18 @@
 #include <stdlib.h>
 #include "scheme.h"
 
+//compiler difference unify
+#ifdef __GNUC__
+# define stricmp strcasecmp
+# define _snprintf snprintf
+char* strlwr(char* str){
+  for(; *str!=0;++str){
+    *str = tolower(*str);
+  }
+  return str;
+}
+#endif
+
 /* operator code */
 enum opcode {
 #define _OP_DEF(A,B,C,D,E,OP) OP,
@@ -19,10 +31,10 @@ enum opcode {
 typedef cell_t* (*dispatch_func_t)(scheme *, opcode);
 typedef struct {
 	dispatch_func_t func;	//函数过程
-	char *name;					//函数名
+	const char *name;					//函数名
 	int min_arity;					//最少参数个数
 	int max_arity;				//最大参数个数
-	char *args_type;
+	const char *args_type;
 } op_code_info;
 
 static void gc(scheme *sc, cell_t* a, cell_t* b);
@@ -61,7 +73,7 @@ enum scheme_type {
 	T_PROMISE=11,					// 
 	T_MACRO=12,						// 宏
 	T_CONTINUATION=13,				// 延续
-	T_ENVIRONMENT=14,				// 环境 	
+	T_ENVIRONMENT=14,				//
 	T_LAST_TYPE=14					// 最大编号
 };
 
@@ -739,7 +751,7 @@ static cell_t* port_from_file(scheme *sc, FILE *f, int prop) {
 }
 
 static cell_t* port_from_filename(scheme *sc, const char *file_name, int prop) {
-	char *mode="r";
+	const char *mode="r";
 	if(prop==(port_input|port_output)) mode="a+";
 	else if(prop==port_output) mode="w";
 	FILE *f=fopen(file_name,mode);
@@ -3097,7 +3109,7 @@ static cell_t* mk_proc(scheme *sc, opcode op) {
 	return p;
 }
 
-static void add_syntax_symbol(scheme *sc, char *name) {
+static void add_syntax_symbol(scheme *sc, const char *name) {
 	cell_t* sym = mk_symbol(sc, name);
 	typeflag(sym) |= T_SYNTAX;
 }
