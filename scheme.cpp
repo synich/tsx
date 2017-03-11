@@ -46,17 +46,17 @@ cell_t* mk_symbol(scheme *sc, const char *name) ;
 #define TOK_RPAREN  1				// )
 #define TOK_DOT     2				// .
 #define TOK_ATOM    3				// 原子 （number id symbol ）
-#define TOK_QUOTE   4				// ' 
+#define TOK_QUOTE   4				// '
 #define TOK_COMMENT 5				// ,
 #define TOK_DQUOTE  6				// "
 #define TOK_BQUOTE  7				// `
 #define TOK_COMMA   8				// ,
 #define TOK_ATMARK  9				// ,@
-#define TOK_SHARP 10				// # 
+#define TOK_SHARP 10				// #
 #define TOK_SHARP_CONST 11			// #  常量 (例如 #t #f #\a)
 #define TOK_VECTOR 12				// #( 数组
 
-#define DELIMITERS  "()\";\f\t\v\n\r "	// 分隔符 
+#define DELIMITERS  "()\";\f\t\v\n\r "	// 分隔符
 #define BLOCK_SIZE 256
 
 enum scheme_type {
@@ -70,7 +70,7 @@ enum scheme_type {
 	T_PROC=8,						// 过程
 	T_FOREIGN=9,					// 扩展过程
 	T_CLOSURE=10,					// 闭包
-	T_PROMISE=11,					// 
+	T_PROMISE=11,					//
 	T_MACRO=12,						// 宏
 	T_CONTINUATION=13,				// 延续
 	T_ENVIRONMENT=14,				//
@@ -344,12 +344,12 @@ static cell_t* find_consecutive_cells(scheme *sc, int n) {
 static cell_t* get_consecutive_cells(scheme *sc, int n) {
 	/* Are there any cells available? */
 	cell_t* x=find_consecutive_cells(sc,n);
-	if (x != &g_nil)  return x; 
+	if (x != &g_nil)  return x;
 
 	/* If not, try gc'ing some */
 	gc(sc, &g_nil, &g_nil);
 	x=find_consecutive_cells(sc,n);
-	if (x != &g_nil)  return x; 
+	if (x != &g_nil)  return x;
 
 	/* If there still aren't, try getting more heap */
 	if (alloc_cellseg(sc,1))
@@ -406,14 +406,14 @@ static cell_t* revappend(scheme *sc, cell_t* acc, cell_t* list) {
 }
 
 /* Result is:
-proper list: length		
+proper list: length
 circular list: -1			//环行链表
 not even a pair: -2	//如果是这样的形式(a . b) （b不是pair）
 dotted list: -2 minus length before dot	//pair 链表的最后一个cell不是nil
 */
 int list_length(scheme *sc, cell_t* a) {
 	int len=0;
-	cell_t* slow= a; 
+	cell_t* slow= a;
 	cell_t* fast= a;
 	while (true)
 	{
@@ -432,8 +432,8 @@ int list_length(scheme *sc, cell_t* a) {
 }
 
 static int is_list(scheme *sc, cell_t* a)
-{ 
-	return list_length(sc,a) >= 0; 
+{
+	return list_length(sc,a) >= 0;
 }
 
 /* Round to nearest. Round to even if midway */
@@ -691,10 +691,10 @@ cell_t* mk_empty_string(scheme *sc, int len, char fill) {
 	return (x);
 }
 
-//端口
+//judge is only one fd and fd==stdin
 static int file_interactive(scheme *sc) {
-	return sc->top_file_index==0 && 
-		sc->load_stack[0].kind&port_file && 
+	return sc->top_file_index==0 &&
+		sc->load_stack[0].kind&port_file &&
 		sc->load_stack[0].f.file==stdin;
 }
 
@@ -1001,7 +1001,7 @@ static cell_t* readstrexp(scheme *sc) {
 /* get token */
 static int token(scheme *sc) {
 	int c = skipspace(sc);
-	if(c == EOF)  return (TOK_EOF); 
+	if(c == EOF)  return (TOK_EOF);
 	switch (c=get_char(sc)) {
 		case EOF:
 			return (TOK_EOF);
@@ -1228,7 +1228,7 @@ static cell_t* mk_atom_from_string(scheme *sc, char *q) {
 	if (c == '.') {
 		has_dec_point=1;
 		c = *p++;
-	} 
+	}
 	if (!isdigit(c)) {
 		return (mk_symbol(sc, strlwr(q)));
 	}
@@ -1315,26 +1315,26 @@ int eqv(cell_t* a, cell_t* b) {
 	if (is_string(a)) {
 		if (is_string(b)) return (string_value(a) == string_value(b));
 		else return (0);
-	} 
+	}
 	else if (is_number(a)) {
 		if (is_number(b)) {
 			if (a->_num.is_fix == b->_num.is_fix)
 				return num_eq(nvalue(a),nvalue(b));
 		}
 		return (0);
-	} 
+	}
 	else if (is_character(a)) {
 		if (is_character(b)) return char_value(a)==char_value(b);
 		else return (0);
-	} 
+	}
 	else if (is_port(a)) {
 		if (is_port(b)) return a==b;
 		else return (0);
-	} 
+	}
 	else if (is_proc(a)) {
 		if (is_proc(b)) return proc_value(a)==proc_value(b);
 		else return (0);
-	} 
+	}
 	else {
 		return (a == b);
 	}
@@ -1490,7 +1490,7 @@ static cell_t* error_helper(scheme *sc, const char * error_desc, cell_t* arg) {
 	char buf[STR_BUFF_SIZE];
 	port_t& load_pt=sc->load_stack[sc->top_file_index];
 	if (load_pt.kind & port_file && load_pt.f.file != stdin) {//如果是一个文件类型的端口 并且不是控制台输入
-		_snprintf(buf, STR_BUFF_SIZE, "(%s : %i) %s", 
+		_snprintf(buf, STR_BUFF_SIZE, "(%s : %i) %s",
 			load_pt.f.filename?load_pt.f.filename:"<unkown file>", load_pt.f.curr_line+1, error_desc);
 		error_desc = (const char*)buf;
 	}
@@ -1544,14 +1544,14 @@ static void s_save(scheme *sc, opcode op, cell_t* args, cell_t* code) {
 }
 
 /* garbage collector  //标记-清除算法
-*  We use algorithm E (Knuth, The Art of Computer Programming Vol.1, sec. 2.3.5), 
+*  We use algorithm E (Knuth, The Art of Computer Programming Vol.1, sec. 2.3.5),
 *  the Schorr-Deutsch-Waite link-inversion algorithm, for marking.
 */
 static void mark(cell_t* a) {
 	cell_t* t = (cell_t*) 0;
 	cell_t* p = a;
 	cell_t* q;
-E2:  
+E2:
 	setmark(p);
 	if(is_vector(p)) {
 		int i;
@@ -1572,7 +1572,7 @@ E2:
 		p = q;
 		goto E2;
 	}
-E5:  
+E5:
 	q = cdr(p); /* down cdr */
 	if (q && !is_mark(q)) {
 		cdr(p) = t;
@@ -1749,7 +1749,7 @@ static cell_t* opexe_0(scheme *sc, opcode op) {
 				sc->code = sc->ret_value;
 				s_goto(sc,OP_APPLY);//这里把参数交给宏去处理
 			} else {
-				sc->code = cdr(sc->code);//(arg ...) 
+				sc->code = cdr(sc->code);//(arg ...)
 				s_goto(sc,OP_E1ARGS);
 			}
 		case OP_E1ARGS:     /* eval arguments */
@@ -1768,17 +1768,17 @@ static cell_t* opexe_0(scheme *sc, opcode op) {
 
 		case OP_APPLY:      /* apply 'code' to 'args' */
 			if (is_proc(sc->code)) {/* PROCEDURE */
-				s_goto(sc,proc_value(sc->code));   
+				s_goto(sc,proc_value(sc->code));
 			} else if (is_foreign(sc->code)){
 				/* Keep nested calls from GC'ing the arglist */
-				//sc->code的形式foreign_proc 
+				//sc->code的形式foreign_proc
 				x=sc->code->_fun(sc,sc->args);
 				s_return(sc,x);
 			} else if (is_closure(sc->code) || is_macro(sc->code) || is_promise(sc->code)) { /* CLOSURE */
 				/* Should not accept promise */
-				//sc->code的形式1 (var_name body ...) 
-				//sc->code的形式2 ( (var_name ...) body ...) 
-				//sc->code的形式3 ( (var_name ...   . var_name) body ...) 
+				//sc->code的形式1 (var_name body ...)
+				//sc->code的形式2 ( (var_name ...) body ...)
+				//sc->code的形式3 ( (var_name ...   . var_name) body ...)
 				new_frame_in_env(sc, closure_env(sc->code));//局部变量环境
 				x = car(closure_code(sc->code));
 				for (y = sc->args;  is_pair(x);   x = cdr(x), y = cdr(y)) {//sc->code的形式2 3
@@ -1804,12 +1804,12 @@ static cell_t* opexe_0(scheme *sc, opcode op) {
 			s_return(sc,car(sc->code));
 
 		case OP_LAMBDA:     /* lambda */{
-			//形式1 (lambda (var_name ...) body ...) 
-			//形式2 (lambda var_name expr ...)  例如 
+			//形式1 (lambda (var_name ...) body ...)
+			//形式2 (lambda var_name expr ...)  例如
 			//这里在init.scm中设置了一个hook用于进行宏展开
 			cell_t* hook=find_slot_in_env(sc,sc->envir,sc->sym_compile_hook,1);
 			if(hook==&g_nil) {
-				//这里sc->code为 ((var_name ...) body ...) 或者(var_name expr ...) 
+				//这里sc->code为 ((var_name ...) body ...) 或者(var_name expr ...)
 				s_return(sc,mk_closure(sc, sc->code, sc->envir));
 			} else {
 				s_save(sc,OP_LAMBDA1,sc->args,sc->code);
@@ -1820,7 +1820,7 @@ static cell_t* opexe_0(scheme *sc, opcode op) {
 		}
 		case OP_LAMBDA1:
 			s_return(sc,mk_closure(sc, sc->ret_value, sc->envir));//定义闭包
-		case OP_MKCLOSURE: /* make-closure */ 
+		case OP_MKCLOSURE: /* make-closure */
 			//形式1 (make-clourse '(lambda? var-name body ...) envir?)      lambda 和 envir是可有可无的
 			//形式2 (make-clourse '(lambda? (var-name ...) body ...) envir?)      lambda 和 envir是可有可无的
 			//例子 (define f (make-closure '(plus ((car plus) 3 4))))  结果为7
@@ -1879,7 +1879,7 @@ static cell_t* opexe_0(scheme *sc, opcode op) {
 			}
 
 		case OP_BEGIN:      /* begin */
-			//形式 (begin body ...) 
+			//形式 (begin body ...)
 			if (!is_pair(sc->code)) s_return(sc,sc->code);//?? 这里这样的代码可以通过(begin . 1)
 			if (cdr(sc->code) != &g_nil) {
 				s_save(sc,OP_BEGIN, &g_nil, cdr(sc->code));//保存剩余的未求值的部分
@@ -1897,10 +1897,10 @@ static cell_t* opexe_0(scheme *sc, opcode op) {
 			else sc->code = cadr(sc->code);  /* (if #f 1) ==> () because * car(sc->NIL) = sc->NIL *///最后sc->code为false_body
 			s_goto(sc,OP_EVAL);//对true_body或者false_body求值
 
-		case OP_LET0:       /* let */ 
+		case OP_LET0:       /* let */
 			//let的形式 (let let_name? ((var_name init_expr) ...) body_expr ...) 。let_name字段可有可无
 			sc->args = &g_nil;
-			sc->ret_value = sc->code;//sc->ret_value形式 (let_name? ((var_name init_expr) ...) body_expr ...) 
+			sc->ret_value = sc->code;//sc->ret_value形式 (let_name? ((var_name init_expr) ...) body_expr ...)
 			//let分为命名的let 和未命名的let
 			sc->code = is_symbol(car(sc->code)) ? cadr(sc->code) : car(sc->code);//sc->code形式 ((var_name init_expr) ...)
 			s_goto(sc,OP_LET1);
@@ -1926,7 +1926,7 @@ static cell_t* opexe_0(scheme *sc, opcode op) {
 			for ( y = sc->args; y != &g_nil; x = cdr(x), y = cdr(y)) {//y为(init_result ...)
 					new_slot_in_env(sc, caar(x), car(y));//caar(x)为var_name , y为 init_result
 			}
-			if (is_symbol(car(sc->code))) {    /* named let */ //命名let 
+			if (is_symbol(car(sc->code))) {    /* named let */ //命名let
 				//这里将命名let转化为一个闭包，这里没有尾递归优化
 				for (x = cadr(sc->code), sc->args = &g_nil; x != &g_nil; x = cdr(x)) {//x为((var_name init_expr) ...)
 					//这个循环的目的就是吧var_name都抽取出来
@@ -2041,7 +2041,7 @@ static cell_t* opexe_1(scheme *sc, opcode op) {
 				if ((sc->code = cdar(sc->code)) == &g_nil) s_return(sc,sc->ret_value);//形式1   这里 sc->code 被改变了
 				if(car(sc->code)==sc->sym_feed_to) {//形式3 这里如果通过 sc->code 应当为  (=> body)
 					if(!is_pair(cdr(sc->code))) Error0(sc,"syntax error in cond");
-					//x 为  '(sc->ret_value)  之所以这个样子 
+					//x 为  '(sc->ret_value)  之所以这个样子
 					//1 参数要放到列表里面，2 这里body是一个处理过程，这个形式确保sc->ret_value不被进一步求值直接交给body
 					//例子 (cond ('(1 2) => list))   结果 ((1 2))
 					x=cons(sc, sc->sym_quote, cons(sc, sc->ret_value, &g_nil));
@@ -2110,7 +2110,7 @@ static cell_t* opexe_1(scheme *sc, opcode op) {
 			}
 
 		case OP_C0STREAM:   /* cons-stream */
-			//(cons-stream expr-arg expr-code) 
+			//(cons-stream expr-arg expr-code)
 			//例子 (cons-stream 1 1)   => (1 . #<PROMISE>)
 			s_save(sc,OP_C1STREAM, &g_nil, cdr(sc->code));
 			sc->code = car(sc->code);
@@ -2142,7 +2142,7 @@ static cell_t* opexe_1(scheme *sc, opcode op) {
 			s_return(sc,sc->code);
 
 		case OP_DELAY:      /* delay */ //delay就是吧表达式转化为一个无参数的闭包
-			//形式  (delay (expr ...))   
+			//形式  (delay (expr ...))
 			//例子 (define f (delay (+ 1 1))) (f)
 			//例子 (define f (delay 1)) (f)
 			x = mk_closure(sc, cons(sc, &g_nil, sc->code), sc->envir);
@@ -2154,7 +2154,7 @@ static cell_t* opexe_1(scheme *sc, opcode op) {
 			sc->code = car(sc->args);
 			sc->args = cadr(sc->args);
 			s_goto(sc,OP_APPLY);
-		case OP_PEVAL: /* eval */ 
+		case OP_PEVAL: /* eval */
 			//形式(eval code envir)
 			if(cdr(sc->args)!=&g_nil) sc->envir=cadr(sc->args);//设置环境
 			sc->code = car(sc->args);//要执行的代码
@@ -2340,7 +2340,7 @@ static cell_t* opexe_2(scheme *sc, opcode op) {
 			s_return(sc,caar(sc->args));
 		case OP_CDR:        /* cdr */
 			s_return(sc,cdar(sc->args));
-		case OP_CONS:       /* cons */ //生成点对 
+		case OP_CONS:       /* cons */ //生成点对
 			cdr(sc->args) = cadr(sc->args);
 			s_return(sc,sc->args);
 		case OP_SETCAR:     /* set-car! */
@@ -2647,7 +2647,7 @@ static cell_t* opexe_4(scheme *sc, opcode op) {
 				s_save(sc, OP_SAVE_FORCED, &g_nil, sc->code);
 				sc->args = &g_nil;
 				s_goto(sc,OP_APPLY);
-			} 
+			}
 			else s_return(sc,sc->code);
 		case OP_SAVE_FORCED:     /* Save forced value replacing promise */
 			memcpy(sc->code,sc->ret_value,sizeof(struct cell_t));
@@ -2724,7 +2724,7 @@ static cell_t* opexe_4(scheme *sc, opcode op) {
 		case OP_GC:         /* gc */
 			gc(sc, &g_nil, &g_nil);
 			s_return(sc,&g_true);
-		case OP_GCVERB:   /* gc-verbose */{ 
+		case OP_GCVERB:   /* gc-verbose */{
 			int  was = sc->gc_verbose;
 			sc->gc_verbose = (car(sc->args) != &g_false);
 			s_retbool(was);
@@ -2747,10 +2747,10 @@ static cell_t* opexe_4(scheme *sc, opcode op) {
 			int prop=0;
 			switch(op) {
 				case OP_OPEN_INFILE:
-					prop=port_input; 
+					prop=port_input;
 					break;
 				case OP_OPEN_OUTFILE:
-					prop=port_output; 
+					prop=port_output;
 					break;
 				case OP_OPEN_INOUTFILE:
 					prop=port_input|port_output;
@@ -2765,11 +2765,11 @@ static cell_t* opexe_4(scheme *sc, opcode op) {
 		case OP_OPEN_INOUTSTRING: /* open-input-output-string */ {
 			int prop=0;
 			switch(op) {
-				case OP_OPEN_INSTRING:     
-					prop=port_input; 
+				case OP_OPEN_INSTRING:
+					prop=port_input;
 					break;
-				case OP_OPEN_INOUTSTRING:  
-					prop=port_input|port_output; 
+				case OP_OPEN_INOUTSTRING:
+					prop=port_input|port_output;
 					break;
 			}
 			cell_t* p=port_from_string(sc, string_value(car(sc->args)),
@@ -2849,7 +2849,7 @@ static cell_t* opexe_5(scheme *sc, opcode op) {
 			if(c==EOF) s_return(sc,&g_eof);
 			else s_return(sc,mk_character(sc,c));
 		}
-		case OP_CHAR_READY: /* char-ready? */ 
+		case OP_CHAR_READY: /* char-ready? */
 			x=sc->inport;
 			if(is_pair(sc->args)) x=car(sc->args);
 			s_retbool(x->_port->kind&port_string);
@@ -2891,11 +2891,11 @@ static cell_t* opexe_5(scheme *sc, opcode op) {
 						s_save(sc,OP_RDQQUOTE, &g_nil, &g_nil);//压入 准引用 处理过程
 					}
 					s_goto(sc,OP_RDSEXPR);//读取S表达式
-				case TOK_COMMA://,解引用 
+				case TOK_COMMA://,解引用
 					s_save(sc,OP_RDUNQUOTE, &g_nil, &g_nil);//压入执行,操作的代码
 					sc->tok = token(sc);
 					s_goto(sc,OP_RDSEXPR);//读取S表达式
-				case TOK_ATMARK://,@解引用 
+				case TOK_ATMARK://,@解引用
 					s_save(sc,OP_RDUQTSP, &g_nil, &g_nil);//压入执行,@操作的代码
 					sc->tok = token(sc);
 					s_goto(sc,OP_RDSEXPR);//读取S表达式
@@ -2923,7 +2923,7 @@ static cell_t* opexe_5(scheme *sc, opcode op) {
 		case OP_RDLIST: {
 			sc->args = cons(sc, sc->ret_value, sc->args);
 			sc->tok = token(sc);
-			if (sc->tok == TOK_EOF) s_return(sc,&g_eof); 
+			if (sc->tok == TOK_EOF) s_return(sc,&g_eof);
 			else if (sc->tok == TOK_RPAREN) {
 				sc->nesting_stack[sc->top_file_index]--;
 				s_return(sc,reverse(sc,  sc->args));
@@ -3285,7 +3285,7 @@ scheme* scheme_new(func_alloc malloc_f, func_dealloc free_f) {
 		typeflag(&g_true) = (T_ATOM | REF_MARK);
 		car(&g_true) = cdr(&g_true) = &g_true;
 		typeflag(&g_false) = (T_ATOM | REF_MARK);
-		car(&g_false) = cdr(&g_false) = &g_false;	
+		car(&g_false) = cdr(&g_false) = &g_false;
     }
 
 	scheme* sc = (scheme*)malloc_f(sizeof(scheme));
@@ -3377,7 +3377,7 @@ void scheme_destroy(scheme *sc) {
 			sc->free(sc->load_stack[i].f.filename);
 		}
 	}
-	
+
 	sc->free(sc);
 }
 

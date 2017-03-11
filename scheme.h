@@ -55,7 +55,7 @@ struct port_t {
 			FILE *file;
 			char *filename;
 			int curr_line;
-			int closeit;
+			int closeit;	//stdin/stdout is holded by scheme which are 0(Not close). Else is 1.
 		} f;
 		struct {
 			char *start;
@@ -105,12 +105,12 @@ typedef struct scheme{
 	cell_t* loadport;
 	port_t load_stack[MAX_FILES];		//我们可能会递归的加载文件或字符串代码 (load "xx.ss") ,这里保存了递归加载的文件时形成的栈
 	int nesting_stack[MAX_FILES];		//缓存了访问每个文件时表达式的递归层次
-	int top_file_index;
+	int top_file_index;				// number of file in stack
 
 	/* We use 4 registers. */
 	int op;							//当前处理方法
 	cell_t* args;					/* register for arguments of function */
-	cell_t* envir;					/* stack register for current environment */ 
+	cell_t* envir;					/* stack register for current environment */
 	cell_t* code;					/* register for current code */
 	cell_t* call_stack;			/* stack register for next evaluation */
 	cell_t* ret_value;
@@ -122,16 +122,16 @@ typedef struct scheme{
 	int tok;						//保持词法分析获取的单词
 	char strbuff[STR_BUFF_SIZE];
 	int eval_result;			//整个解释器的运行状态 ，解释器退出后，可以通过这个值知道解释器退出的原因
-	int print_flag;			//控制atom2str函数中打印输出的格式
+	int print_flag;			//控制atom2str函数中打印输出的格式,range[0,1,2,8,10,16]
 	char gc_verbose;      /* if gc_verbose is not zero, print gc status */
 
 	/* global cell*s to special symbols */
 	cell_t* sym_lambda;			/* cell* to syntax lambda */
-	cell_t* sym_quote;				/* cell* to syntax quote */						//引用    '
-	cell_t* sym_qquote;			/* cell* to symbol quasiquote */			//准引用 `
-	cell_t* sym_unquote;			/* cell* to symbol unquote */				//解引用 ,
+	cell_t* sym_quote;			/* cell* to syntax quote */			//引用   '
+	cell_t* sym_qquote;			/* cell* to symbol quasiquote */	//准引用 `
+	cell_t* sym_unquote;		/* cell* to symbol unquote */		//解引用 ,
 	cell_t* sym_unquote_sp;	/* cell* to symbol unquote-splicing */	//解引用 ,@
-	cell_t* sym_feed_to;			/* => */												// cond中有用到
+	cell_t* sym_feed_to;		/* => */							// cond中有用到
 	cell_t* sym_colon_hook;		/* *colon-hook* */
 	cell_t* sym_error_hook;		/* *error-hook* */
 	cell_t* sym_sharp_hook;		/* *sharp-hook* */
@@ -140,8 +140,10 @@ typedef struct scheme{
 
 SCHEME_EXPORT scheme* scheme_new(func_alloc malloc_f, func_dealloc free_f);
 SCHEME_EXPORT void scheme_destroy(scheme *sc);
+/// param[in] fin is effective, filename is just a hint,even NULL is ok
 SCHEME_EXPORT void scheme_load_file(scheme *sc, FILE *fin, const char *filename);
 SCHEME_EXPORT void scheme_load_string(scheme *sc, const char *cmd);
+/// return 0:OK -1:fail
 SCHEME_EXPORT int scheme_result_long(scheme *sc, long *err);
 SCHEME_EXPORT int scheme_result_double(scheme *sc, double *err);
 SCHEME_EXPORT int scheme_result_string(scheme *sc, char **err);
